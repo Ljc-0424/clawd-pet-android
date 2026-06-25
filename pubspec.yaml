@@ -1,0 +1,26 @@
+name: clawd_pet
+description: Clawd Pet - Android 桌宠
+publish_to: 'none'
+version: 1.0.0+1
+
+environment:
+  sdk: '>=3.0.0 <4.0.0'
+
+dependencies:
+  flutter:
+    sdk: flutter
+  web_socket_channel: ^2.4.0
+  shared_preferences: ^2.2.0
+  webview_flutter: ^4.12.0
+  flutter_overlay_window: ^0.4.3
+
+dev_dependencies:
+  flutter_test:
+    sdk: flutter
+  flutter_lints: ^3.0.0
+
+flutter:
+  uses-material-design: true
+  assets:
+    - assets/
+    - assets/svg/

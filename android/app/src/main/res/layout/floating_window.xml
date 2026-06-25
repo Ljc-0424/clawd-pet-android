@@ -1,0 +1,42 @@
+<?xml version="1.0" encoding="utf-8"?>
+<FrameLayout xmlns:android="http://schemas.android.com/apk/res/android"
+    android:layout_width="80dp"
+    android:layout_height="80dp"
+    android:layout_gravity="center">
+
+    <!-- 外圈光环 -->
+    <View
+        android:id="@+id/pet_ring"
+        android:layout_width="80dp"
+        android:layout_height="80dp"
+        android:background="@drawable/pet_ring_background" />
+
+    <!-- 桌宠主体 -->
+    <LinearLayout
+        android:id="@+id/pet_body"
+        android:layout_width="64dp"
+        android:layout_height="64dp"
+        android:layout_gravity="center"
+        android:background="@drawable/pet_body_background"
+        android:orientation="vertical"
+        android:gravity="center"
+        android:padding="4dp">
+
+        <TextView
+            android:id="@+id/pet_icon"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="🦀"
+            android:textSize="28sp" />
+
+        <TextView
+            android:id="@+id/pet_text"
+            android:layout_width="wrap_content"
+            android:layout_height="wrap_content"
+            android:text="IDLE"
+            android:textColor="#E6EDF3"
+            android:textSize="9sp"
+            android:textStyle="bold" />
+    </LinearLayout>
+
+</FrameLayout>

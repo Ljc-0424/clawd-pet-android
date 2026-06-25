@@ -1,0 +1,5 @@
+<?xml version="1.0" encoding="utf-8"?>
+<resources>
+    <string name="eye_track_service_desc">Clawd 桌宠眼睛追踪：监听触摸位置让宠物眼睛看向你的手指方向</string>
+    <string name="typing_detector_desc">Clawd 桌宠打字检测：检测到你在打字时切换桌宠动画</string>
+</resources>

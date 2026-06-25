@@ -1,0 +1,31 @@
+# Flutter/Dart
+.dart_tool/
+.packages
+build/
+.flutter-plugins
+.flutter-plugins-dependencies
+*.iml
+
+# IDE
+.idea/
+.vscode/
+*.swp
+
+# Platform builds
+android/.gradle/
+android/app/build/
+android/app/debug/
+android/app/profile/
+ios/Pods/
+ios/.symlinks/
+linux/flutter/ephemeral/
+macos/Flutter/ephemeral/
+macos/Pods/
+windows/flutter/ephemeral/
+
+# Misc
+.DS_Store
+Thumbs.db
+*.lock
+!pubspec.lock
+assets_backup/

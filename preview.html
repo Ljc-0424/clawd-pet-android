@@ -1,0 +1,630 @@
+<!DOCTYPE html>
+<html lang="zh">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Clawd Pet - UI 预览</title>
+<style>
+@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+
+* { margin: 0; padding: 0; box-sizing: border-box; }
+body {
+    font-family: 'Segoe UI', system-ui, sans-serif;
+    background: #0d1117;
+    display: flex;
+    justify-content: center;
+    align-items: center;
+    min-height: 100vh;
+    padding: 20px;
+}
+
+/* 手机外框 */
+.phone {
+    width: 375px;
+    height: 812px;
+    background: #161b22;
+    border-radius: 44px;
+    overflow: hidden;
+    box-shadow: 0 0 0 3px #30363d, 0 20px 80px rgba(0,0,0,0.8);
+    position: relative;
+}
+
+.screen { display: none; height: 100%; flex-direction: column; }
+.screen.active { display: flex; }
+
+/* 顶部栏 - 类似原版 Clawd 的暗色风格 */
+.appbar {
+    background: #0d1117;
+    color: #e6edf3;
+    padding: 54px 20px 14px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #21262d;
+}
+.appbar-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 14px;
+    color: #58a6ff;
+    text-shadow: 0 0 10px rgba(88,166,255,0.3);
+}
+.appbar-actions { display: flex; gap: 16px; align-items: center; }
+.appbar-btn {
+    background: none;
+    border: 1px solid #30363d;
+    color: #8b949e;
+    width: 36px;
+    height: 36px;
+    border-radius: 8px;
+    font-size: 16px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    transition: all 0.2s;
+}
+.appbar-btn:hover { border-color: #58a6ff; color: #58a6ff; }
+
+.status-badge {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 4px 10px;
+    border-radius: 12px;
+    font-size: 11px;
+    font-weight: 600;
+}
+.status-badge.on { background: rgba(63,185,80,0.15); color: #3fb950; }
+.status-badge.off { background: rgba(248,81,73,0.15); color: #f85149; }
+.status-dot { width: 8px; height: 8px; border-radius: 50%; }
+.status-dot.on { background: #3fb950; box-shadow: 0 0 8px rgba(63,185,80,0.5); }
+.status-dot.off { background: #f85149; }
+
+/* 主页 */
+.home-content {
+    flex: 1;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    padding: 20px;
+    background: radial-gradient(ellipse at center, #1c2333 0%, #0d1117 70%);
+}
+
+/* 桌宠容器 */
+.pet-ring {
+    width: 180px;
+    height: 180px;
+    border-radius: 50%;
+    background: conic-gradient(from 0deg, #21262d, #30363d, #21262d);
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-bottom: 8px;
+    position: relative;
+}
+.pet-ring::before {
+    content: '';
+    position: absolute;
+    inset: 3px;
+    border-radius: 50%;
+    background: radial-gradient(ellipse at center, #1c2333 0%, #0d1117 100%);
+    z-index: 0;
+}
+.pet-ring.active { animation: ring-pulse 2s infinite; }
+@keyframes ring-pulse {
+    0%, 100% { box-shadow: 0 0 20px rgba(88,166,255,0.2); }
+    50% { box-shadow: 0 0 40px rgba(88,166,255,0.4); }
+}
+
+.pet-container {
+    width: 140px;
+    height: 140px;
+    border-radius: 50%;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    transition: transform 0.3s;
+    position: relative;
+    z-index: 2;
+}
+.pet-container:hover { transform: scale(1.08); }
+.pet-container.idle { background: linear-gradient(135deg, #2d333b, #444c56); }
+.pet-container.thinking {
+    background: linear-gradient(135deg, #f0883e, #d29922);
+    animation: thinking-glow 1.5s infinite;
+}
+.pet-container.success {
+    background: linear-gradient(135deg, #238636, #2ea043);
+    animation: success-bounce 0.5s;
+}
+@keyframes thinking-glow {
+    0%, 100% { box-shadow: 0 0 20px rgba(240,136,62,0.3); }
+    50% { box-shadow: 0 0 40px rgba(240,136,62,0.6); }
+}
+@keyframes success-bounce {
+    0%, 100% { transform: scale(1); }
+    50% { transform: scale(1.1); }
+}
+
+.pet-icon { font-size: 48px; filter: drop-shadow(0 2px 4px rgba(0,0,0,0.3)); }
+.pet-label {
+    color: #e6edf3;
+    font-size: 12px;
+    font-weight: 600;
+    margin-top: 6px;
+    text-shadow: 0 1px 2px rgba(0,0,0,0.5);
+}
+
+/* 状态指示器 */
+.state-indicator {
+    display: flex;
+    gap: 8px;
+    margin: 24px 0;
+}
+.state-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #30363d;
+    transition: all 0.3s;
+}
+.state-dot.active { background: #58a6ff; box-shadow: 0 0 8px rgba(88,166,255,0.5); }
+
+/* 按钮 */
+.btn-primary {
+    padding: 12px 32px;
+    border: none;
+    border-radius: 8px;
+    font-size: 14px;
+    font-weight: 600;
+    cursor: pointer;
+    transition: all 0.2s;
+    margin-bottom: 24px;
+}
+.btn-primary.connected {
+    background: #21262d;
+    color: #f85149;
+    border: 1px solid #f85149;
+}
+.btn-primary.connected:hover { background: rgba(248,81,73,0.1); }
+.btn-primary.disconnected {
+    background: #238636;
+    color: white;
+}
+.btn-primary.disconnected:hover { background: #2ea043; }
+
+/* 信息卡片 */
+.info-card {
+    background: #161b22;
+    border: 1px solid #21262d;
+    border-radius: 12px;
+    padding: 16px;
+    width: 100%;
+}
+.info-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid #21262d;
+}
+.info-row:last-child { border: none; }
+.info-label { color: #8b949e; font-size: 13px; }
+.info-value { font-weight: 600; font-size: 13px; }
+.info-value.connected { color: #3fb950; }
+.info-value.disconnected { color: #f85149; }
+.info-value code {
+    background: #21262d;
+    padding: 2px 8px;
+    border-radius: 4px;
+    font-family: monospace;
+    color: #79c0ff;
+}
+
+/* 底部导航 */
+.nav-tabs {
+    display: flex;
+    background: #0d1117;
+    border-top: 1px solid #21262d;
+    padding: 8px 0 28px;
+}
+.nav-tab {
+    flex: 1;
+    text-align: center;
+    padding: 8px;
+    cursor: pointer;
+    transition: color 0.2s;
+    color: #484f58;
+}
+.nav-tab.active { color: #58a6ff; }
+.nav-tab-icon { font-size: 22px; margin-bottom: 4px; }
+.nav-tab-label { font-size: 11px; font-weight: 500; }
+
+/* 设置页 */
+.settings-content { flex: 1; overflow-y: auto; padding: 16px 20px; }
+.section-title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 10px;
+    color: #58a6ff;
+    margin: 24px 0 16px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+}
+.input-group { margin-bottom: 16px; }
+.input-group label { display: block; margin-bottom: 8px; color: #8b949e; font-size: 13px; }
+.input-group input {
+    width: 100%;
+    padding: 12px 14px;
+    background: #0d1117;
+    border: 1px solid #30363d;
+    border-radius: 8px;
+    color: #e6edf3;
+    font-size: 14px;
+    font-family: monospace;
+    transition: border-color 0.2s;
+}
+.input-group input:focus { outline: none; border-color: #58a6ff; }
+
+.switch-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 12px 0;
+}
+.switch-label { color: #e6edf3; font-size: 14px; }
+.switch {
+    width: 44px; height: 24px;
+    background: #30363d;
+    border-radius: 12px;
+    position: relative;
+    cursor: pointer;
+    transition: background 0.3s;
+}
+.switch.on { background: #238636; }
+.switch::after {
+    content: '';
+    width: 20px; height: 20px;
+    background: #e6edf3;
+    border-radius: 10px;
+    position: absolute;
+    top: 2px; left: 2px;
+    transition: left 0.3s;
+}
+.switch.on::after { left: 22px; }
+
+.slider-row { padding: 12px 0; }
+.slider-row label { display: block; margin-bottom: 8px; color: #8b949e; font-size: 13px; }
+.slider-row input[type=range] {
+    width: 100%;
+    -webkit-appearance: none;
+    height: 4px;
+    background: #30363d;
+    border-radius: 2px;
+    outline: none;
+}
+.slider-row input[type=range]::-webkit-slider-thumb {
+    -webkit-appearance: none;
+    width: 18px; height: 18px;
+    background: #58a6ff;
+    border-radius: 50%;
+    cursor: pointer;
+}
+
+.info-box {
+    background: #161b22;
+    border: 1px solid #21262d;
+    border-radius: 8px;
+    padding: 16px;
+    margin-top: 12px;
+    font-size: 13px;
+    line-height: 1.8;
+    color: #8b949e;
+}
+.info-box strong { color: #58a6ff; }
+
+/* 聊天页 */
+.chat-content { flex: 1; display: flex; flex-direction: column; }
+.messages { flex: 1; overflow-y: auto; padding: 16px; }
+
+.msg { margin-bottom: 16px; display: flex; }
+.msg.ai { justify-content: flex-start; }
+.msg.user { justify-content: flex-end; }
+
+.msg-bubble {
+    max-width: 80%;
+    padding: 12px 16px;
+    border-radius: 16px;
+    font-size: 14px;
+    line-height: 1.5;
+}
+.msg.ai .msg-bubble {
+    background: #21262d;
+    color: #e6edf3;
+    border-bottom-left-radius: 4px;
+}
+.msg.user .msg-bubble {
+    background: #1f6feb;
+    color: white;
+    border-bottom-right-radius: 4px;
+}
+.msg-time { font-size: 11px; color: #484f58; margin-top: 4px; }
+.msg.user .msg-time { text-align: right; }
+
+.input-bar {
+    padding: 12px 16px 32px;
+    background: #0d1117;
+    border-top: 1px solid #21262d;
+    display: flex;
+    gap: 10px;
+}
+.input-bar input {
+    flex: 1;
+    padding: 12px 16px;
+    background: #161b22;
+    border: 1px solid #30363d;
+    border-radius: 24px;
+    color: #e6edf3;
+    font-size: 14px;
+}
+.input-bar input:focus { outline: none; border-color: #58a6ff; }
+.input-bar input::placeholder { color: #484f58; }
+.send-btn {
+    width: 44px; height: 44px;
+    background: #238636;
+    border: none;
+    border-radius: 50%;
+    color: white;
+    font-size: 18px;
+    cursor: pointer;
+    transition: background 0.2s;
+}
+.send-btn:hover { background: #2ea043; }
+
+/* 切换按钮 */
+.screen-switcher {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+}
+.screen-switcher button {
+    padding: 10px 20px;
+    border: 1px solid #30363d;
+    background: #161b22;
+    color: #8b949e;
+    border-radius: 8px;
+    cursor: pointer;
+    font-size: 13px;
+    font-weight: 500;
+    transition: all 0.2s;
+}
+.screen-switcher button:hover { border-color: #58a6ff; color: #58a6ff; }
+.screen-switcher button.active {
+    background: #1f6feb;
+    border-color: #1f6feb;
+    color: white;
+}
+</style>
+</head>
+<body>
+
+<div>
+    <div class="screen-switcher">
+        <button class="active" onclick="showScreen('home')">🏠 主页</button>
+        <button onclick="showScreen('settings')">⚙️ 设置</button>
+        <button onclick="showScreen('chat')">💬 气泡</button>
+    </div>
+
+    <div class="phone">
+        <!-- 主页 -->
+        <div class="screen active" id="screen-home">
+            <div class="appbar">
+                <div class="appbar-title">CLAWD</div>
+                <div class="appbar-actions">
+                    <div class="status-badge on" id="statusBadge">
+                        <span class="status-dot on" id="statusDot"></span>
+                        已连接
+                    </div>
+                    <button class="appbar-btn" onclick="showScreen('settings')">⚙</button>
+                </div>
+            </div>
+            <div class="home-content">
+                <div class="pet-ring active" id="petRing">
+                    <div class="pet-container idle" id="petContainer" onclick="showScreen('chat')">
+                        <div class="pet-icon" id="petIcon">🦀</div>
+                        <div class="pet-label" id="petLabel">IDLE</div>
+                        <div style="font-size:9px;color:#8b949e;margin-top:4px">SVG 动画版</div>
+                    </div>
+                </div>
+
+                <div class="state-indicator">
+                    <div class="state-dot active" id="dot0"></div>
+                    <div class="state-dot" id="dot1"></div>
+                    <div class="state-dot" id="dot2"></div>
+                    <div class="state-dot" id="dot3"></div>
+                    <div class="state-dot" id="dot4"></div>
+                </div>
+
+                <button class="btn-primary connected" id="connectBtn" onclick="toggleConnection()">
+                    断开连接
+                </button>
+
+                <div class="info-card">
+                    <div class="info-row">
+                        <span class="info-label">服务器</span>
+                        <span class="info-value"><code>192.168.1.100:8001</code></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">网络</span>
+                        <span class="info-value"><code>ZeroTier</code></span>
+                    </div>
+                    <div class="info-row">
+                        <span class="info-label">状态</span>
+                        <span class="info-value connected" id="connectionStatus">已连接</span>
+                    </div>
+                </div>
+            </div>
+            <div class="nav-tabs">
+                <div class="nav-tab active" onclick="showScreen('home')">
+                    <div class="nav-tab-icon">🏠</div>
+                    <div class="nav-tab-label">首页</div>
+                </div>
+                <div class="nav-tab" onclick="showScreen('chat')">
+                    <div class="nav-tab-icon">💬</div>
+                    <div class="nav-tab-label">气泡</div>
+                </div>
+                <div class="nav-tab" onclick="showScreen('settings')">
+                    <div class="nav-tab-icon">⚙️</div>
+                    <div class="nav-tab-label">设置</div>
+                </div>
+            </div>
+        </div>
+
+        <!-- 设置页 -->
+        <div class="screen" id="screen-settings">
+            <div class="appbar">
+                <button class="appbar-btn" onclick="showScreen('home')">←</button>
+                <div class="appbar-title">SETTINGS</div>
+                <button class="appbar-btn" onclick="showScreen('home')">✓</button>
+            </div>
+            <div class="settings-content">
+                <div class="section-title">连接设置</div>
+                <div class="input-group">
+                    <label>服务器地址</label>
+                    <input type="text" value="192.168.1.100" placeholder="IP 或 ZeroTier IP">
+                </div>
+                <div class="input-group">
+                    <label>端口</label>
+                    <input type="text" value="8001">
+                </div>
+                <div class="switch-row">
+                    <span class="switch-label">自动连接</span>
+                    <div class="switch on" onclick="this.classList.toggle('on')"></div>
+                </div>
+
+                <div class="section-title">桌宠设置</div>
+                <div class="slider-row">
+                    <label>桌宠大小: <strong>100px</strong></label>
+                    <input type="range" min="50" max="200" value="100">
+                </div>
+                <div class="slider-row">
+                    <label>眼睛灵敏度: <strong>中</strong></label>
+                    <input type="range" min="1" max="5" value="3">
+                </div>
+
+                <div class="section-title">网络说明</div>
+                <div class="info-box">
+                    <strong>本地网络</strong><br>
+                    填写电脑的局域网 IP（如 192.168.1.100）<br><br>
+                    <strong>ZeroTier（推荐）</strong><br>
+                    1. 电脑和手机都安装 ZeroTier<br>
+                    2. 登录同一账号<br>
+                    3. 填写电脑的 ZeroTier IP（10.x.x.x）<br><br>
+                    <strong>端口</strong><br>
+                    默认 8001，与 State Bridge 配置一致
+                </div>
+            </div>
+        </div>
+
+        <!-- 消息气泡预览 -->
+        <div class="screen" id="screen-chat">
+            <div class="appbar">
+                <button class="appbar-btn" onclick="showScreen('home')">←</button>
+                <div class="appbar-title">BUBBLE</div>
+                <button class="appbar-btn" onclick="showScreen('home')">✕</button>
+            </div>
+            <div style="flex:1;display:flex;flex-direction:column;align-items:center;justify-content:center;padding:20px;background:radial-gradient(ellipse at center, #1c2333 0%, #0d1117 70%);">
+                <div style="font-size:48px;margin-bottom:20px">🦀</div>
+                <div style="color:#8b949e;font-size:13px;text-align:center;margin-bottom:30px">
+                    点击桌宠显示消息气泡<br>
+                    气泡中可以快速发消息
+                </div>
+
+                <!-- 气泡预览 -->
+                <div style="width:300px;background:#161b22;border:1px solid #21262d;border-radius:16px;overflow:hidden">
+                    <div style="background:#0d1117;padding:10px 14px;border-bottom:1px solid #21262d;display:flex;align-items:center;gap:8px">
+                        <span>🦀</span>
+                        <span style="color:#e6edf3;font-size:13px;font-weight:600;flex:1">Clawd</span>
+                        <span style="color:#8b949e;font-size:14px;cursor:pointer">✕</span>
+                    </div>
+                    <div style="padding:12px;min-height:200px">
+                        <div style="margin-bottom:8px">
+                            <div style="background:#21262d;color:#e6edf3;padding:8px 12px;border-radius:12px;border-bottom-left-radius:2px;display:inline-block;max-width:220px;font-size:13px">
+                                你好！我是 Clawd 🦀
+                            </div>
+                            <div style="font-size:10px;color:#484f58;margin-top:2px">12:00</div>
+                        </div>
+                        <div style="text-align:right;margin-bottom:8px">
+                            <div style="background:#1f6feb;color:white;padding:8px 12px;border-radius:12px;border-bottom-right-radius:2px;display:inline-block;max-width:220px;font-size:13px">
+                                帮我写一个排序算法
+                            </div>
+                            <div style="font-size:10px;color:#484f58;margin-top:2px">12:01</div>
+                        </div>
+                        <div style="margin-bottom:8px">
+                            <div style="background:#21262d;color:#e6edf3;padding:8px 12px;border-radius:12px;border-bottom-left-radius:2px;display:inline-block;max-width:220px;font-size:13px">
+                                好的！这是快速排序：
+                            </div>
+                            <div style="font-size:10px;color:#484f58;margin-top:2px">12:01</div>
+                        </div>
+                    </div>
+                    <div style="padding:8px;background:#0d1117;border-top:1px solid #21262d;display:flex;gap:8px;align-items:center">
+                        <input type="text" placeholder="发送消息..." style="flex:1;padding:8px 14px;background:#161b22;border:1px solid #30363d;border-radius:20px;color:#e6edf3;font-size:13px;outline:none">
+                        <div style="width:34px;height:34px;background:#238636;border-radius:17px;display:flex;align-items:center;justify-content:center;color:white;font-size:14px;cursor:pointer">➤</div>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+</div>
+
+<script>
+function showScreen(name) {
+    document.querySelectorAll('.screen').forEach(s => s.classList.remove('active'));
+    document.getElementById('screen-' + name).classList.add('active');
+    document.querySelectorAll('.nav-tab').forEach(t => t.classList.remove('active'));
+    document.querySelectorAll('.screen-switcher button').forEach(b => b.classList.remove('active'));
+    document.querySelectorAll('.screen-switcher button')[['home','settings','chat'].indexOf(name)].classList.add('active');
+}
+
+const states = [
+    { class: 'idle', icon: '🦀', label: 'IDLE', dot: 0 },
+    { class: 'thinking', icon: '🤔', label: 'THINKING', dot: 1 },
+    { class: 'thinking', icon: '🔧', label: 'WORKING', dot: 2 },
+    { class: 'success', icon: '🎉', label: 'SUCCESS', dot: 3 },
+    { class: 'idle', icon: '🦀', label: 'IDLE', dot: 0 },
+];
+let stateIdx = 0;
+
+setInterval(() => {
+    stateIdx = (stateIdx + 1) % states.length;
+    const s = states[stateIdx];
+    document.getElementById('petContainer').className = 'pet-container ' + s.class;
+    document.getElementById('petIcon').textContent = s.icon;
+    document.getElementById('petLabel').textContent = s.label;
+    for (let i = 0; i < 5; i++) {
+        document.getElementById('dot' + i).className = 'state-dot' + (i === s.dot ? ' active' : '');
+    }
+}, 3000);
+
+let connected = true;
+function toggleConnection() {
+    connected = !connected;
+    const btn = document.getElementById('connectBtn');
+    const badge = document.getElementById('statusBadge');
+    const dot = document.getElementById('statusDot');
+    const status = document.getElementById('connectionStatus');
+    if (connected) {
+        btn.className = 'btn-primary connected'; btn.textContent = '断开连接';
+        badge.className = 'status-badge on'; dot.className = 'status-dot on';
+        status.className = 'info-value connected'; status.textContent = '已连接';
+    } else {
+        btn.className = 'btn-primary disconnected'; btn.textContent = '连接';
+        badge.className = 'status-badge off'; dot.className = 'status-dot off';
+        status.className = 'info-value disconnected'; status.textContent = '未连接';
+    }
+}
+</script>
+</body>
+</html>
