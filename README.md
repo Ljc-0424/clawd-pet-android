@@ -1,125 +1,194 @@
-# Clawd Pet - Android 桌宠
+# Clawd Pet — Android 桌面宠物
 
-## 功能
+一款运行在 Android 手机上的桌面宠物悬浮窗应用，基于开源项目 [Clawd on Desk](https://github.com/rullerzhou-afk/clawd-on-desk) 的 SVG 动画资源，用 Flutter + Kotlin 原生重新实现。宠物以悬浮窗形式覆盖在所有 App 之上，可以拖拽、点击交互，并根据手机状态和 AI 工作状态自动切换动画。
 
-- ✅ WebSocket 连接到 State Bridge
-- ✅ 实时显示 AI 状态（空闲/思考/工作/成功/错误）
-- ✅ 设置页面（服务器地址、端口、自动连接）
-- ✅ 聊天面板
-- ✅ 桌宠大小可调
-- ✅ ZeroTier 支持
-- ✅ **悬浮窗**（始终在最上层，可拖动）
+动画资源原版作者：**Ruller_Lulu / 鹿鹿**
 
-## 安装 Flutter
+## 两个版本
 
-### Windows
-1. 下载 Flutter SDK: https://docs.flutter.dev/get-started/install/windows
-2. 解压到 `C:\flutter`
-3. 添加 `C:\flutter\bin` 到 PATH 环境变量
-4. 运行 `flutter doctor` 检查环境
+| | OpenClaw 版（本仓库） | [独立版](https://github.com/Ljc-0424/clawd-pet-standalone) |
+|---|---|---|
+| 包名 | `com.example.clawd_pet` | `com.example.clawd_desktop_pet` |
+| 连接 OpenClaw | ✅ 通过 WebSocket 同步 AI 工作状态 | ❌ 无网络依赖，打开即用 |
+| 适用场景 | 配合 OpenClaw AI 使用，宠物随 AI 状态变化 | 纯桌宠，手机状态检测 + 自定义动画 |
 
-### 安装 Android Studio
-1. 下载 Android Studio: https://developer.android.com/studio
-2. 安装并配置 Android SDK
-3. 创建 Android 模拟器或连接真机
+两个版本共享相同的核心引擎，唯一区别是 OpenClaw 版多了 WebSocket 连接和 bridge 状态守卫。
 
-## 构建步骤
+## 核心功能
+
+### 交互
+
+| 操作 | 效果 |
+|------|------|
+| 单击 | 左/右戳反应动画 |
+| 双击（300ms 内） | 跳跃反应 |
+| 连续 3 戳 | 烦躁反应 |
+| 拖拽 | 拖拽动画，带边缘吸附 |
+| 边缘挂载 | 拖到屏幕边缘 → 迷你模式（半身探头） |
+| 边缘点击 | 第一次探头，第二次跳出回屏幕 |
+
+### 手机状态检测
+
+| 检测器 | 触发 | 动画 | 自动恢复 |
+|--------|------|------|---------|
+| 音乐播放 | AudioPlaybackCallback + 轮询 | 打碟 | 暂停后恢复 |
+| 打字 | AccessibilityService | 打字工作 | 停止 2 秒后恢复 |
+| 通知 | AccessibilityService | 通知动画 | 5 秒自动回 |
+| 充电 | BroadcastReceiver | 开心 | 一次播放后不再重复 |
+| 低电量 | BroadcastReceiver | 哈欠 | 8 秒自动回 |
+| 断网 | BroadcastReceiver | 错误 | 恢复网络后回 |
+| 来电/通话 | BroadcastReceiver | 通知/打字 | 挂断后回 |
+| 息屏/亮屏 | BroadcastReceiver | 暂停/唤醒 | 亮屏恢复之前状态 |
+
+### OpenClaw 状态同步（仅本版本）
+
+通过 State Bridge（Python WebSocket 代理）接收 AI 工作状态：
+
+| 状态 | 动画 | 优先级 | 行为 |
+|------|------|--------|------|
+| thinking | 思考 | 2 | 持续到新状态 |
+| working | 打字工作 | 3 | 持续到新状态 |
+| sweeping/juggling/carrying | 扫地/杂耍/搬运 | 4-6 | 持续到新状态 |
+| attention | 开心 | 5 | oneshot，4 秒自动回 |
+| error | 错误 | 8 | oneshot，5 秒自动回 |
+| notification | 通知 | 7 | oneshot，5 秒自动回 |
+
+### 睡眠系统
+
+5 分钟无操作自动进入睡眠序列：
+
+```
+哈欠(3秒) → 打盹(10分钟) → 瘫倒(6秒) → 熟睡
+```
+
+每步独立 Runnable，任何交互可中断唤醒。
+
+### 空闲动画轮播
+
+空闲时每 6 秒切换一次随机动画，间隔 1.5 秒，不重复：生活、张望、泡泡、巫师、看书（5 种，可自定义扩展）
+
+### 迷你模式（边缘挂载）
+
+- 拖到屏幕边缘 → 角色半身探出 → 播放进入动画
+- 迷你空闲、迷你工作、迷你开心、迷你警告、迷你睡眠自动切换
+- 点击跳出 → 横移动画滑回屏幕
+- 左边缘自动翻转 SVG
+
+## 动画配置系统
+
+用户可通过 Flutter UI 自由配置每个状态的动画组合：
+
+- 37+ 张动画卡片，按分类浏览（空闲/工作/情绪/睡眠/反应/迷你/检测器/经典）
+- 14+ 个可配置状态，每个状态可分配多个动画随机轮播
+- 实时预览，点击卡片即可查看效果
+- 配置持久化到 SharedPreferences，自动同步到 Kotlin 悬浮窗
+- 支持一键恢复默认
+
+## 技术架构
+
+```
+┌─────────────────────────────────────────────┐
+│  Flutter UI 层                               │
+│  ┌─────────┐ ┌──────────┐ ┌──────────────┐ │
+│  │主页预览  │ │动画配置页│ │ 设置/关于    │ │
+│  │SvgPetWidget│ │拖拽卡片  │ │权限引导     │ │
+│  └─────────┘ └──────────┘ └──────────────┘ │
+│           MethodChannel                      │
+├─────────────────────────────────────────────┤
+│  Kotlin 原生层                               │
+│  ┌────────────────────────────────────────┐ │
+│  │ FloatingPetService (前台服务)           │ │
+│  │  ┌──────────┐ ┌───────────────────┐   │ │
+│  │  │渲染窗口   │ │触摸窗口(角色区域) │   │ │
+│  │  │WebView+SVG│ │拖拽/点击/边缘检测 │   │ │
+│  │  └──────────┘ └───────────────────┘   │ │
+│  │  ┌──────────────────────────────────┐ │ │
+│  │  │ 状态机                           │ │ │
+│  │  │ 优先级系统 + oneshot 自动回      │ │ │
+│  │  │ 睡眠序列(可取消) + 空闲轮播      │ │ │
+│  │  │ 迷你模式 + 触摸穿透              │ │ │
+│  │  └──────────────────────────────────┘ │ │
+│  │  ┌──────────────────────────────────┐ │ │
+│  │  │ 检测器                           │ │ │
+│  │  │ MusicDetector (回调+轮询双保障)  │ │ │
+│  │  │ TypingDetector (无障碍+安全超时) │ │ │
+│  │  │ Battery / Network / Screen / Call│ │ │
+│  │  └──────────────────────────────────┘ │ │
+│  └────────────────────────────────────────┘ │
+├─────────────────────────────────────────────┤
+│  State Bridge (仅 OpenClaw 版)              │
+│  Python FastAPI WebSocket 代理              │
+│  接收 OpenClaw 插件状态 → 转发给手机        │
+└─────────────────────────────────────────────┘
+```
+
+### 悬浮窗双窗口架构
+
+```
+渲染窗口 (TYPE_APPLICATION_OVERLAY + FLAG_NOT_TOUCHABLE)
+  └─ WebView 加载 SVG 动画
+  └─ 完全透明穿透，不拦截触摸
+触摸窗口 (TYPE_APPLICATION_OVERLAY, 仅角色区域大小)
+  └─ 处理所有拖拽/点击/边缘检测
+  └─ 位置和大小随渲染窗口同步
+  └─ 角色区域外触摸穿透到其他 App
+```
+
+### 状态机设计
+
+```
+反应态(点击/拖拽) > attention(特殊通道) > bridge态(优先级) > detector态 > idle > sleeping
+每个状态都有明确的退出条件：
+- 持久态 → 被更高优先级打断
+- oneshot态 → 超时自动回 idle
+- 反应态 → 播完自动回 resolveAndApply()
+- 睡眠序列 → 每步独立 Runnable，可被任意事件打断
+```
+
+## 项目结构
+
+```
+lib/
+  main.dart                        ← 主页 + 权限引导
+  screens/
+    settings_screen.dart           ← 连接设置
+    animation_config_screen.dart   ← 动画配置 UI
+    about_screen.dart              ← 关于页面
+  services/
+    animation_config_service.dart  ← 动画配置数据模型 + 持久化
+    settings_service.dart          ← SharedPreferences 封装
+    websocket_service.dart         ← WebSocket 客户端 (仅 OpenClaw)
+  widgets/
+    svg_pet_widget.dart            ← WebView SVG 预览组件
+  models/
+    state_event.dart               ← 状态事件模型
+android/app/src/main/kotlin/.../
+  FloatingPetService.kt           ← 核心：悬浮窗 + 状态机 + 检测器
+  MainActivity.kt                 ← MethodChannel 处理
+  MusicDetector.kt                ← 音乐检测
+  TypingDetector.kt               ← 打字+通知检测 (AccessibilityService)
+  BatteryDetector.kt              ← 电池检测
+  NetworkDetector.kt              ← 网络检测
+  ScreenDetector.kt               ← 屏幕检测
+  CallDetector.kt                 ← 来电检测
+assets/svg/                       ← 64+ 个 SVG 动画文件
+```
+
+## 构建
 
 ```bash
-# 1. 进入项目目录
-cd clawd-pet-android
+# OpenClaw 版
+cd clawd-pet-android && flutter build apk --release
 
-# 2. 创建 Flutter 项目结构
-flutter create . --org com.example --project-name clawd_pet
+# 独立版
+cd clawd-pet-standalone && flutter build apk --release
 
-# 3. 安装依赖
-flutter pub get
-
-# 4. 运行（调试模式）
-flutter run
-
-# 5. 构建 APK
-flutter build apk --release
+# Bridge（仅 OpenClaw 需要）
+cd state-bridge && python main.py
 ```
 
-## 使用步骤
+## 许可
 
-### 1. 启动 State Bridge（电脑端）
-```bash
-cd state-bridge
-python main.py
-```
+动画资源来自 [Clawd on Desk](https://github.com/rullerzhou-afk/clawd-on-desk)，原版作者 Ruller_Lulu / 鹿鹿。
 
-### 2. 安装 ZeroTier（推荐，用于远程连接）
-- 电脑和手机都安装 ZeroTier
-- 加入同一网络（记住 Network ID）
-- 在 ZeroTier 管理后台授权设备
-- 获取电脑的 ZeroTier IP（10.x.x.x）
-
-### 3. 配置 Android 应用
-1. 打开应用
-2. 进入设置
-3. 填写服务器地址：
-   - 本地网络：电脑的局域网 IP（如 192.168.1.100）
-   - ZeroTier：电脑的 ZeroTier IP（10.x.x.x）
-4. 端口：8001
-5. 保存并连接
-
-### 4. 使用
-- 桌宠会自动显示 AI 状态
-- 点击桌宠打开聊天面板
-- 在聊天面板中发送消息
-
-## 架构
-
-```
-Android 桌宠 (Flutter)
-      │
-      │ WebSocket
-      │
-ZeroTier 专网
-      │
-      ▼
-State Bridge (Python)
-      │
-      ▼
-OpenClaw
-```
-
-## 文件结构
-
-```
-clawd-pet-android/
-├── lib/
-│   ├── main.dart              # 应用入口
-│   ├── models/
-│   │   └── state_event.dart   # 状态事件模型
-│   ├── services/
-│   │   ├── websocket_service.dart  # WebSocket 服务
-│   │   └── settings_service.dart   # 设置服务
-│   └── screens/
-│       ├── settings_screen.dart    # 设置页面
-│       └── chat_screen.dart        # 聊天面板
-├── assets/                    # 资源文件
-├── pubspec.yaml              # 依赖配置
-└── README.md                 # 说明文档
-```
-
-## 状态说明
-
-| 状态 | 图标 | 颜色 | 说明 |
-|------|------|------|------|
-| idle | 🦀 | 灰色 | 空闲 |
-| user_message | 👀 | 蓝色 | 收到消息 |
-| thinking | 🤔 | 橙色 | 思考中 |
-| tool_call | 🔧 | 紫色 | 工作中 |
-| success | 🎉 | 绿色 | 完成 |
-| error | ❌ | 红色 | 错误 |
-
-## 下一步
-
-- [ ] 添加悬浮窗功能
-- [ ] 集成 Clawd 动画资源
-- [ ] 添加通知功能
-- [ ] 支持语音输入
-- [ ] Live2D 动画
+作者：**陈俊霖**
